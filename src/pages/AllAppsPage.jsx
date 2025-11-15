@@ -5,22 +5,31 @@ import { useEffect, useState } from "react";
 const AllAppsPage = () => {
   // const apps = useLoaderData();
   const [apps, setApps] = useState([])
-  const [totalApps, setTotalApps] = useState(0);
-  const [totalPage, setTotalPage] = useState(0);
+  const [totalApps, setTotalApps] = useState(0)
+  const [totalPage, setTotalPage] = useState(0)
   const [currentPage, setCurrentPage] = useState(0)
+  const [sort, setSort] = useState('size')
+  const [order, setOrder] = useState('')
+  const [searchText, setSearchText] = useState('')
+
   const limit = 10;
 
   useEffect(() => {
-    fetch(`http://localhost:5000/apps?limit=${limit}&&skip=${currentPage * limit}`)
+    fetch(`http://localhost:5000/apps?limit=${limit}&&skip=${limit * currentPage}&&sort=${sort}&&order=${order}&search=${searchText}`)
       .then(res => res.json())
       .then(data => {
-        setApps(data.apps);
-        setTotalApps(data.totalApps)
-        const page = Math.ceil(data.totalApps / limit)
-        setTotalPage(page);
+        setApps(data.apps)
+        setTotalApps(data.total)
+        const page = Math.ceil(data.total / limit)
+        setTotalPage(page)
       })
+  }, [currentPage, sort, order, searchText])
 
-  }, [currentPage])
+  const handleSort = e => {
+    const sortText = e.target.value;
+    setSort(sortText.split('-')[0])
+    setOrder(sortText.split('-')[1])
+  }
   return (
     <div>
       <title>All Apps | Hero Apps</title>
@@ -60,13 +69,13 @@ const AllAppsPage = () => {
                 <path d="m21 21-4.3-4.3"></path>
               </g>
             </svg>
-            <input type="search" className="" placeholder="Search Apps" />
+            <input onChange={(e) => setSearchText(e.target.value)} type="search" className="" placeholder="Search Apps" />
           </label>
         </form>
 
         <div className="">
-          <select className="select bg-white">
-            <option selected disabled={true}>
+          <select className="select bg-white" onChange={handleSort}>
+            <option selected disabled={true} >
               Sort by <span className="text-xs">R / S / D</span>
             </option>
             <option value={"rating-desc"}>Ratings : High - Low</option>
@@ -94,12 +103,12 @@ const AllAppsPage = () => {
           )}
         </div>
       </>
-      <div className="flex gap-3 flex-wrap justify-center my-4">
+      <div className="flex flex-wrap gap-3 justify-center my-5">
         {
           currentPage > 0 && <button onClick={() => setCurrentPage(currentPage - 1)} className="btn">prev</button>
         }
-        {[...Array(totalPage).keys()].map(i => <button onClick={() => setCurrentPage(i)} className={`btn ${i === currentPage && `btn-primary`}`} key={i}>{i + 1}</button>)}
-        {currentPage < totalPage - 1 && <button onClick={() => setCurrentPage(currentPage + 1)} className="btn"> next</button>}
+        {[...Array(totalPage).keys()].map(i => <button onClick={() => setCurrentPage(i)} key={i} className={`btn ${currentPage === i && 'btn-primary'}`}>{i}</button>)}
+        {currentPage < totalPage - 1 && <button onClick={() => setCurrentPage(currentPage + 1)} className="btn">next</button>}
       </div>
     </div>
   );
